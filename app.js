@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSettings();
     renderCategories();
     fetchAllNews();
+    initSwipeToClose();
 });
 
 function updateDate() {
@@ -49,7 +50,6 @@ function initSettings() {
     renderSources();
     renderManagedCategories();
 
-    // Custom Round Settings Button
     const openBtn = document.getElementById('open-settings-btn');
     if (openBtn) {
         openBtn.onclick = () => document.getElementById('settings-view').classList.remove('hidden');
@@ -59,7 +59,7 @@ function initSettings() {
     if (closeBtn) {
         closeBtn.onclick = () => {
             document.getElementById('settings-view').classList.add('hidden');
-            fetchAllNews(); // Refresh if sources changed
+            fetchAllNews();
         };
     }
 
@@ -67,9 +67,40 @@ function initSettings() {
     document.getElementById('add-category-btn').onclick = addCategory;
 }
 
+// Swipe to Close Implementation
+function initSwipeToClose() {
+    const sheet = document.getElementById('settings-view');
+    let startY = 0;
+    let currentY = 0;
+
+    sheet.addEventListener('touchstart', (e) => {
+        startY = e.touches[0].clientY;
+    });
+
+    sheet.addEventListener('touchmove', (e) => {
+        currentY = e.touches[0].clientY;
+        const diff = currentY - startY;
+        if (diff > 0) { // Only swipe down
+            sheet.style.transform = `translateY(${diff}px)`;
+            sheet.style.transition = 'none';
+        }
+    });
+
+    sheet.addEventListener('touchend', (e) => {
+        const diff = currentY - startY;
+        sheet.style.transition = 'transform 0.3s ease-out';
+        if (diff > 150) {
+            sheet.classList.add('hidden');
+        }
+        sheet.style.transform = '';
+        startY = 0;
+        currentY = 0;
+    });
+}
+
 async function fetchAllNews() {
     const feed = document.getElementById('news-feed');
-    feed.innerHTML = '<div class="loader ai-pulse">Recupero notizie reali...</div>';
+    feed.innerHTML = '<div class="loader ai-pulse">Caricamento notizie...</div>';
     state.loading = true;
 
     try {
@@ -125,25 +156,41 @@ window.setCategory = (c) => {
     renderNews();
 };
 
+// Safe string escaping for HTML onclick events
+function escapeString(str) {
+    if (!str) return '';
+    return str.replace(/\\/g, '\\\\')
+              .replace(/'/g, "\\'")
+              .replace(/"/g, '&quot;')
+              .replace(/\n/g, ' ')
+              .replace(/\r/g, ' ');
+}
+
 function renderNews() {
     const feed = document.getElementById('news-feed');
     const filtered = state.activeCategory === 'Tutte' ? state.news : state.news.filter(n => n.category === state.activeCategory);
     
     if (filtered.length === 0) {
-        feed.innerHTML = '<div class="empty">Nessuna notizia in questa categoria.</div>';
+        feed.innerHTML = '<div class="empty">Nessuna notizia trovata.</div>';
         return;
     }
 
-    feed.innerHTML = filtered.map(n => `
-        <div class="news-card" onclick="openArticle('${n.title.replace(/'/g, "\\'")}', '${n.source}', '${n.content.replace(/'/g, "\\'").replace(/\n/g, "")}', '${n.link}')">
-            <div class="card-header">
-                <span class="source">${n.source}</span>
-                <span class="gemini-tag">Gemini Summary</span>
+    feed.innerHTML = filtered.map(n => {
+        const safeTitle = escapeString(n.title);
+        const safeSource = escapeString(n.source);
+        const safeContent = escapeString(n.content);
+        
+        return `
+            <div class="news-card" onclick="openArticle('${safeTitle}', '${safeSource}', '${safeContent}', '${n.link}')">
+                <div class="card-header">
+                    <span class="source">${n.source}</span>
+                    <span class="gemini-tag">Gemini Summary</span>
+                </div>
+                <h2>${n.title}</h2>
+                <p class="summary-preview">${n.summary}</p>
             </div>
-            <h2>${n.title}</h2>
-            <p class="summary-preview">${n.summary}</p>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 window.openArticle = async (title, source, content, link) => {
@@ -158,7 +205,13 @@ window.openArticle = async (title, source, content, link) => {
 
     await new Promise(r => setTimeout(r, 800));
 
-    const clean = content.replace(/<[^>]*>?/gm, '').trim() || "Anteprima non disponibile. Usa il browser in-app.";
+    // Clean HTML tags and entities
+    const clean = content.replace(/<[^>]*>?/gm, '')
+                         .replace(/&quot;/g, '"')
+                         .replace(/&amp;/g, '&')
+                         .replace(/&lt;/g, '<')
+                         .replace(/&gt;/g, '>')
+                         .trim() || "Contenuto non disponibile.";
 
     modalBody.innerHTML = `
         <div style="font-size:1.1em; line-height:1.6; white-space:pre-wrap; margin-bottom:20px;">${clean}</div>
@@ -198,10 +251,12 @@ function renderSources() {
 function addSource() {
     const input = document.getElementById('new-source-url');
     if (input.value) {
-        state.sources.push({ id: Date.now(), name: new URL(input.value).hostname, url: input.value });
-        localStorage.setItem('news_sources', JSON.stringify(state.sources));
-        renderSources();
-        input.value = '';
+        try {
+            state.sources.push({ id: Date.now(), name: new URL(input.value).hostname.replace('www.', ''), url: input.value });
+            localStorage.setItem('news_sources', JSON.stringify(state.sources));
+            renderSources();
+            input.value = '';
+        } catch(e) { alert("URL non valido"); }
     }
 }
 
