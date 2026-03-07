@@ -37,6 +37,7 @@ body {
     top: 0;
     z-index: 100;
     border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
 }
 
 .header-top {
@@ -184,6 +185,8 @@ body {
     padding: 20px;
     box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
     transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto; /* Enable scrolling */
+    -webkit-overflow-scrolling: touch;
 }
 
 .settings-view.hidden {
