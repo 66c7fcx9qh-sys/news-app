@@ -2,67 +2,22 @@
 const state = {
     news: [],
     sources: JSON.parse(localStorage.getItem('news_sources')) || [
-        { id: 1, name: 'BBC News', url: 'https://www.bbc.com/news' },
-        { id: 2, name: 'The Verge', url: 'https://www.theverge.com' },
-        { id: 3, name: 'Wired', url: 'https://www.wired.com' }
+        { id: 1, name: 'BBC News', url: 'https://feeds.bbci.co.uk/news/rss.xml' },
+        { id: 2, name: 'The Verge', url: 'https://www.theverge.com/rss/index.xml' },
+        { id: 3, name: 'ANSA', url: 'https://www.ansa.it/sito/notizie/topnews/topnews_rss.xml' }
     ],
     categories: JSON.parse(localStorage.getItem('news_categories')) || ['Tutte', 'Tecnologia', 'Scienza', 'Business', 'Design'],
     activeCategory: 'Tutte',
-    fontSize: localStorage.getItem('font_size') || 16
+    fontSize: localStorage.getItem('font_size') || 16,
+    loading: false
 };
-
-// Mock News Data (In a real app, this would be fetched from sources via a proxy)
-const mockNews = [
-    {
-        title: "Nuova frontiera nel calcolo quantistico: traguardo raggiunto",
-        source: "Scienza Oggi",
-        category: "Scienza",
-        summary: "I ricercatori hanno raggiunto un nuovo traguardo di stabilità nei qubit, promettendo di accelerare la ricerca medica.",
-        content: "Oggi, i laboratori Quantum Dynamics hanno annunciato una scoperta rivoluzionaria. Utilizzando una nuova lega di superconduttori, il team è riuscito a mantenere la coerenza dei qubit per un tempo 10 volte superiore ai record precedenti. Questo significa che i calcoli complessi per la sintesi proteica potrebbero presto essere eseguiti in pochi minuti anziché anni, aprendo la strada a cure personalizzate per malattie rare. La comunità scientifica è in fermento, definendo questo il 'momento Apollo' del calcolo quantistico."
-    },
-    {
-        title: "Apple annuncia i nuovi processori M4 con AI integrata",
-        source: "Wired",
-        category: "Tecnologia",
-        summary: "I nuovi chip M4 puntano tutto sull'intelligenza artificiale generativa locale, con prestazioni Neural Engine raddoppiate.",
-        content: "Cupertino ha appena svelato l'M4, l'ultimo chip al silicio progettato internamente. La novità principale è un Neural Engine a 32 core capace di gestire modelli linguistici di grandi dimensioni direttamente sul dispositivo, garantendo privacy e velocità senza precedenti. Tim Cook ha dichiarato che 'l'M4 segna una nuova era per il personal computing, dove l'AI non è solo una funzione, ma il cuore dell'esperienza'. I primi MacBook Pro con M4 arriveranno sul mercato il prossimo mese."
-    },
-    {
-        title: "I mercati globali reagiscono ai nuovi dati sull'inflazione",
-        source: "Business Insider",
-        category: "Business",
-        summary: "Borse in rialzo dopo i dati sull'inflazione più bassi del previsto, alimentando speranze di tagli ai tassi d'interesse.",
-        content: "Gli indici Dow Jones e Nasdaq hanno chiuso in forte rialzo ieri, dopo che il rapporto sull'indice dei prezzi al consumo ha mostrato un rallentamento della crescita dei prezzi. Gli analisti prevedono ora che la Federal Reserve possa iniziare a tagliare i tassi d'interesse già dalla prossima riunione di giugno. Questo ottimismo ha spinto non solo i titoli tecnologici ma anche il settore immobiliare, che soffre particolarmente per gli alti costi del prestito. Resta però cautela sulle tensioni geopolitiche che potrebbero influenzare i prezzi dell'energia."
-    },
-    {
-        title: "Design minimalista: perché meno è meglio nelle app moderne",
-        source: "Design Week",
-        category: "Design",
-        summary: "Esaminiamo come la riduzione del rumore visivo stia migliorando la conversione e l'accessibilità nelle web app.",
-        content: "Nel 2024, la tendenza del 'Less is More' è tornata prepotentemente alla ribalta. Dopo anni di design massimalisti e interfacce sature, gli utenti cercano chiarezza. Grandi aziende come Airbnb e Uber hanno semplificato ulteriormente le loro interfacce, concentrandosi sulla gerarchia tipografica e sugli spazi bianchi. Questo non è solo un cambio estetico: studi dimostrano che interfacce meno affollate riducono il carico cognitivo, rendendo le applicazioni più accessibili a persone con neurodiversità o disabilità visive."
-    },
-    {
-        title: "SpaceX lancia con successo la missione Artemis III",
-        source: "BBC News",
-        category: "Scienza",
-        summary: "Il razzo Starship ha completato il test cruciale per il prossimo allunaggio umano, superando le aspettative.",
-        content: "In una notte stellata a Boca Chica, Starship ha acceso i suoi 33 motori Raptor portando con successo il modulo di allunaggio in orbita terrestre. Questo test era fondamentale per convalidare le procedure di rifornimento in orbita, l'ostacolo tecnico più grande per la missione Artemis III della NASA, che mira a riportare l'uomo sulla Luna nel 2026. Elon Musk ha twittato ringraziando il team per lo sforzo monumentale. Il prossimo passo sarà un test di rientro atmosferico ad alta quota previsto per l'estate."
-    },
-    {
-        title: "L'impatto dei nuovi regolamenti europei sulla privacy",
-        source: "The Verge",
-        category: "Tecnologia",
-        summary: "L'Unione Europea introduce nuove regole per limitare come le Big Tech possono profilare gli utenti per i feed.",
-        content: "Il nuovo pacchetto di leggi sui mercati digitali (DMA) sta iniziando a produrre i suoi effetti. Da questa settimana, le piattaforme considerate 'gatekeeper' devono offrire agli utenti un'opzione chiara per un feed non personalizzato basato sulla profilazione. Questo mette in crisi il modello pubblicitario di molte aziende americane, ma viene salutato dai difensori dei diritti civili come una vittoria storica per la sovranità digitale dei cittadini. Le multe per chi non si adegua possono arrivare fino al 10% del fatturato globale annuo."
-    }
-];
 
 // Initialize UI
 document.addEventListener('DOMContentLoaded', () => {
     updateDate();
     initSettings();
     renderCategories();
-    renderNews();
+    fetchAllNews();
     setupNavigation();
 });
 
@@ -73,24 +28,83 @@ function updateDate() {
 
 function initSettings() {
     const fontSlider = document.getElementById('font-size');
-    fontSlider.value = state.fontSize;
-    document.documentElement.style.setProperty('--base-font-size', `${state.fontSize}px`);
-
-    fontSlider.addEventListener('input', (e) => {
-        state.fontSize = e.target.value;
+    if (fontSlider) {
+        fontSlider.value = state.fontSize;
         document.documentElement.style.setProperty('--base-font-size', `${state.fontSize}px`);
-        localStorage.setItem('font_size', state.fontSize);
-    });
+
+        fontSlider.addEventListener('input', (e) => {
+            state.fontSize = e.target.value;
+            document.documentElement.style.setProperty('--base-font-size', `${state.fontSize}px`);
+            localStorage.setItem('font_size', state.fontSize);
+        });
+    }
 
     renderSources();
     renderManagedCategories();
 
-    document.getElementById('add-source-btn').onclick = addSource;
-    document.getElementById('add-category-btn').onclick = addCategory;
+    const addSourceBtn = document.getElementById('add-source-btn');
+    if (addSourceBtn) addSourceBtn.onclick = addSource;
+    
+    const addCatBtn = document.getElementById('add-category-btn');
+    if (addCatBtn) addCatBtn.onclick = addCategory;
+}
+
+// Real News Fetching Logic
+async function fetchAllNews() {
+    const feed = document.getElementById('news-feed');
+    feed.innerHTML = '<div class="loader">Aggiornamento notizie...</div>';
+    state.loading = true;
+
+    try {
+        const fetchPromises = state.sources.map(source => 
+            fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url)}`)
+                .then(res => res.json())
+                .catch(() => ({ status: 'error' }))
+        );
+
+        const results = await Promise.all(fetchPromises);
+        let allNews = [];
+
+        results.forEach((data, index) => {
+            if (data.status === 'ok') {
+                const sourceName = state.sources[index].name;
+                const items = data.items.map(item => ({
+                    title: item.title,
+                    source: sourceName,
+                    summary: item.description.replace(/<[^>]*>?/gm, '').substring(0, 150) + '...',
+                    content: item.content || item.description,
+                    link: item.link,
+                    pubDate: new Date(item.pubDate),
+                    category: detectCategory(item.title + " " + (item.content || item.description))
+                }));
+                allNews = [...allNews, ...items];
+            }
+        });
+
+        // Sort by date (newest first)
+        allNews.sort((a, b) => b.pubDate - a.pubDate);
+        state.news = allNews;
+        renderNews();
+    } catch (err) {
+        console.error("Fetch error:", err);
+        feed.innerHTML = '<div class="error" style="padding:20px; color:#ff453a; text-align:center;">Impossibile caricare le notizie. Controlla la connessione o gli URL nelle impostazioni.</div>';
+    } finally {
+        state.loading = false;
+    }
+}
+
+function detectCategory(text) {
+    text = text.toLowerCase();
+    if (text.includes('tech') || text.includes('apple') || text.includes('google') || text.includes('chip') || text.includes('smart') || text.includes('digitale')) return 'Tecnologia';
+    if (text.includes('scienza') || text.includes('nasa') || text.includes('spazio') || text.includes('ricerca') || text.includes('astronomia')) return 'Scienza';
+    if (text.includes('business') || text.includes('mercati') || text.includes('economia') || text.includes('finanza') || text.includes('dollaro')) return 'Business';
+    if (text.includes('design') || text.includes('minimalismo') || text.includes('architettura') || text.includes('grafica')) return 'Design';
+    return 'Tutte';
 }
 
 function renderCategories() {
     const container = document.getElementById('category-tabs');
+    if (!container) return;
     container.innerHTML = state.categories.map(cat => `
         <div class="category-tab ${cat === state.activeCategory ? 'active' : ''}" onclick="setCategory('${cat}')">
             ${cat}
@@ -106,12 +120,19 @@ function setCategory(cat) {
 
 function renderNews() {
     const feed = document.getElementById('news-feed');
-    const filteredNews = state.activeCategory === 'Tutte'
-        ? mockNews
-        : mockNews.filter(n => n.category === state.activeCategory);
+    if (!feed) return;
+
+    if (state.news.length === 0 && !state.loading) {
+        feed.innerHTML = '<div class="empty-state" style="padding:40px; text-align:center; color:var(--text-muted);">Nessuna notizia trovata. Aggiungi URL validi di feed RSS nelle impostazioni.</div>';
+        return;
+    }
+
+    const filteredNews = state.activeCategory === 'Tutte' 
+        ? state.news 
+        : state.news.filter(n => n.category === state.activeCategory);
 
     feed.innerHTML = filteredNews.map(item => `
-        <div class="news-card" onclick="showFullArticle('${item.title.replace(/'/g, "\\'")}', '${item.source.replace(/'/g, "\\'")}', '${item.content.replace(/'/g, "\\'").replace(/\n/g, "<br>")}')">
+        <div class="news-card" onclick="showFullArticle('${item.title.replace(/'/g, "\\'")}', '${item.source.replace(/'/g, "\\'")}', '${item.content.replace(/'/g, "\\'").replace(/\n/g, " ").replace(/"/g, '&quot;')}', '${item.link}')">
             <div class="card-header">
                 <span class="source">${item.source}</span>
                 <span class="gemini-tag">Gemini Summary</span>
@@ -125,51 +146,66 @@ function renderNews() {
 // Navigation Logic
 function setupNavigation() {
     const views = {
-        'nav-home': null,
+        'nav-home': null, 
         'nav-settings': 'settings-view'
     };
 
     Object.keys(views).forEach(navId => {
-        document.getElementById(navId).addEventListener('click', () => {
-            // Reset active tabs
-            document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(navId).classList.add('active');
+        const el = document.getElementById(navId);
+        if (el) {
+            el.addEventListener('click', () => {
+                document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
+                el.classList.add('active');
 
-            if (navId === 'nav-settings') {
-                document.getElementById('settings-view').classList.remove('hidden');
-            } else {
-                document.getElementById('settings-view').classList.add('hidden');
-            }
-        });
+                if (navId === 'nav-settings') {
+                    document.getElementById('settings-view').classList.remove('hidden');
+                } else {
+                    document.getElementById('settings-view').classList.add('hidden');
+                    fetchAllNews();
+                }
+            });
+        }
     });
 
-    document.getElementById('close-settings').onclick = () => {
-        document.getElementById('settings-view').classList.add('hidden');
-        document.getElementById('nav-home').classList.add('active');
-        document.getElementById('nav-settings').classList.remove('active');
-    };
+    const closeBtn = document.getElementById('close-settings');
+    if (closeBtn) {
+        closeBtn.onclick = () => {
+            document.getElementById('settings-view').classList.add('hidden');
+            document.getElementById('nav-home').classList.add('active');
+            document.getElementById('nav-settings').classList.remove('active');
+            fetchAllNews();
+        };
+    }
 }
 
 // Full Article View logic
-function showFullArticle(title, source, content) {
+function showFullArticle(title, source, content, link) {
     const modal = document.getElementById('summary-modal');
     const modalTitle = document.getElementById('modal-title');
     const modalBody = document.getElementById('modal-body');
 
-    // Update modal header for full news
+    if (!modal || !modalTitle || !modalBody) return;
+
     document.querySelector('.gemini-badge').innerText = "Notizia Completa";
     document.querySelector('.gemini-badge').classList.add('news-badge');
 
     modalTitle.innerText = title;
+    
+    // Simple text cleaning for content
+    const cleanContent = content.replace(/<[^>]*>?/gm, '');
+
     modalBody.innerHTML = `
         <div class="article-meta">Fonte: <strong>${source}</strong></div>
-        <div class="article-content">${content}</div>
+        <div class="article-content" style="white-space: pre-wrap;">
+            ${cleanContent}
+            <br><br>
+            <a href="${link}" target="_blank" class="primary-btn" style="text-decoration:none; display:inline-block; margin-top:10px;">Leggi articolo originale</a>
+        </div>
     `;
     modal.classList.remove('hidden');
 
     document.getElementById('close-modal').onclick = () => {
         modal.classList.add('hidden');
-        // Reset badge for next time if needed
         document.querySelector('.gemini-badge').innerText = "Gemini Summary";
         document.querySelector('.gemini-badge').classList.remove('news-badge');
     };
@@ -178,9 +214,13 @@ function showFullArticle(title, source, content) {
 // Source Management
 function renderSources() {
     const list = document.getElementById('sources-list');
+    if (!list) return;
     list.innerHTML = state.sources.map(s => `
         <div class="list-item">
-            <span>${s.name}</span>
+            <div style="display:flex; flex-direction:column; max-width: 80%;">
+                <span style="font-weight:600; overflow:hidden; text-overflow:ellipsis;">${s.name}</span>
+                <span style="font-size:10px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis;">${s.url}</span>
+            </div>
             <button onclick="removeSource(${s.id})">✕</button>
         </div>
     `).join('');
@@ -189,24 +229,32 @@ function renderSources() {
 function addSource() {
     const urlInput = document.getElementById('new-source-url');
     if (urlInput.value) {
-        const id = Date.now();
-        const name = new URL(urlInput.value).hostname.replace('www.', '');
-        state.sources.push({ id, name, url: urlInput.value });
-        localStorage.setItem('news_sources', JSON.stringify(state.sources));
-        renderSources();
-        urlInput.value = '';
+        try {
+            const id = Date.now();
+            let url = urlInput.value.trim();
+            if (!url.startsWith('http')) url = 'https://' + url;
+            
+            const hostname = new URL(url).hostname.replace('www.', '');
+            state.sources.push({ id, name: hostname, url: url });
+            localStorage.setItem('news_sources', JSON.stringify(state.sources));
+            renderSources();
+            urlInput.value = '';
+        } catch (e) {
+            alert("URL non valido. Assicurati di inserire un link corretto.");
+        }
     }
 }
 
-function removeSource(id) {
+window.removeSource = function(id) {
     state.sources = state.sources.filter(s => s.id !== id);
     localStorage.setItem('news_sources', JSON.stringify(state.sources));
     renderSources();
-}
+};
 
 // Category Management
 function renderManagedCategories() {
     const list = document.getElementById('categories-list');
+    if (!list) return;
     list.innerHTML = state.categories.filter(c => c !== 'Tutte').map(c => `
         <div class="list-item">
             <span>${c}</span>
@@ -226,9 +274,9 @@ function addCategory() {
     }
 }
 
-function removeCategory(cat) {
+window.removeCategory = function(cat) {
     state.categories = state.categories.filter(c => c !== cat);
     localStorage.setItem('news_categories', JSON.stringify(state.categories));
     renderCategories();
     renderManagedCategories();
-}
+};
