@@ -40,24 +40,42 @@ body {
     border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
 }
 
-.header-flex {
+.header-top {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-end;
+    padding-bottom: 5px;
+}
+
+.header-left {
+    display: flex;
+    flex-direction: column;
 }
 
 .greeting {
-    font-size: 13px;
+    font-size: 28px;
     font-weight: 600;
-    color: var(--primary-color);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    color: var(--text-main);
+    letter-spacing: -0.5px;
+    line-height: 1.1;
 }
 
-.header-top h1 {
-    margin: 5px 0 15px;
-    font-size: 32px;
+.header-top .date {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-transform: uppercase;
     font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+
+.brand-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 /* AI Analysis Pulse */
