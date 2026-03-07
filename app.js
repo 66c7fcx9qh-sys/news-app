@@ -169,15 +169,12 @@ function setupNavigation() {
                 document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
                 el.classList.add('active');
 
-                if (navId === 'nav-settings') {
-                    document.getElementById('settings-view').classList.remove('hidden');
-                } else {
-                    document.getElementById('settings-view').classList.add('hidden');
-                    fetchAllNews();
-                }
-            });
-        }
-    });
+    const openSettingsBtn = document.getElementById('open-settings-btn');
+    if (openSettingsBtn) {
+        openSettingsBtn.onclick = () => {
+            document.getElementById('settings-view').classList.remove('hidden');
+        };
+    }
 
     const closeBtn = document.getElementById('close-settings');
     if (closeBtn) {
