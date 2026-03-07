@@ -234,14 +234,27 @@ async function showFullArticle(title, source, content, link) {
                 <p style="margin:5px 0 0; font-size: 0.85em; color: #ccc;">Ho rimosso pubblicità e link superflui per una lettura pulita.</p>
             </div>
             <br>
-            <a href="${link}" target="_blank" class="primary-btn" style="text-decoration:none; display:inline-block; margin-top:10px;">Apri Fonte Originale</a>
+            <button onclick="openInAppBrowser('${link}')" class="primary-btn" style="width:100%; margin-bottom:10px;">Visualizza Articolo Completo (In-App)</button>
+            <a href="${link}" target="_blank" class="secondary-btn" style="text-decoration:none; display:inline-block; width:100%; text-align:center; box-sizing:border-box;">Apri in Safari (Esterno)</a>
         </div>
     `;
 
     document.getElementById('close-modal').onclick = () => {
         modal.classList.add('hidden');
+        document.getElementById('iframe-container').classList.add('hidden');
+        document.getElementById('article-iframe').src = '';
     };
 }
+
+window.openInAppBrowser = function(url) {
+    const iframeContainer = document.getElementById('iframe-container');
+    const iframe = document.getElementById('article-iframe');
+    const badge = document.querySelector('.gemini-badge');
+
+    badge.innerText = "Browser In-App";
+    iframe.src = url;
+    iframeContainer.classList.remove('hidden');
+};
 
 // Source Management
 function renderSources() {
