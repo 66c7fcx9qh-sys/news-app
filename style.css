@@ -40,16 +40,17 @@ body {
     border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
 }
 
-.header-top {
+.header-flex {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.header-top .date {
+.greeting {
     font-size: 13px;
-    color: var(--text-muted);
-    text-transform: uppercase;
     font-weight: 600;
+    color: var(--primary-color);
+    text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
@@ -57,6 +58,19 @@ body {
     margin: 5px 0 15px;
     font-size: 32px;
     font-weight: 600;
+}
+
+/* AI Analysis Pulse */
+.ai-pulse {
+    animation: pulse 1.5s infinite ease-in-out;
+    color: var(--accent-gemini);
+    font-weight: 600;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
 }
 
 .category-tabs {

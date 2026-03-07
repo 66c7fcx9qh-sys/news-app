@@ -24,6 +24,19 @@ document.addEventListener('DOMContentLoaded', () => {
 function updateDate() {
     const options = { weekday: 'long', day: 'numeric', month: 'short' };
     document.getElementById('current-date').innerText = new Date().toLocaleDateString('it-IT', options);
+    updateGreeting();
+}
+
+function updateGreeting() {
+    const hour = new Date().getHours();
+    const greetingEl = document.getElementById('day-greeting');
+    if (greetingEl) {
+        if (hour >= 5 && hour < 18) {
+            greetingEl.innerText = 'Good Morning';
+        } else {
+            greetingEl.innerText = 'Good Evening';
+        }
+    }
 }
 
 function initSettings() {
@@ -81,7 +94,6 @@ async function fetchAllNews() {
             }
         });
 
-        // Sort by date (newest first)
         allNews.sort((a, b) => b.pubDate - a.pubDate);
         state.news = allNews;
         renderNews();
@@ -178,36 +190,56 @@ function setupNavigation() {
     }
 }
 
-// Full Article View logic
-function showFullArticle(title, source, content, link) {
+// Full Article View logic (Enhanced with AI simulation)
+async function showFullArticle(title, source, content, link) {
     const modal = document.getElementById('summary-modal');
     const modalTitle = document.getElementById('modal-title');
     const modalBody = document.getElementById('modal-body');
+    const badge = document.querySelector('.gemini-badge');
 
     if (!modal || !modalTitle || !modalBody) return;
 
-    document.querySelector('.gemini-badge').innerText = "Notizia Completa";
-    document.querySelector('.gemini-badge').classList.add('news-badge');
-
+    badge.innerText = "Gemini Analysis";
+    badge.classList.remove('news-badge');
     modalTitle.innerText = title;
     
-    // Simple text cleaning for content
-    const cleanContent = content.replace(/<[^>]*>?/gm, '');
-
+    // Pulse animation while "Gemini" processes
     modalBody.innerHTML = `
-        <div class="article-meta">Fonte: <strong>${source}</strong></div>
-        <div class="article-content" style="white-space: pre-wrap;">
-            ${cleanContent}
-            <br><br>
-            <a href="${link}" target="_blank" class="primary-btn" style="text-decoration:none; display:inline-block; margin-top:10px;">Leggi articolo originale</a>
-        </div>
+        <div class="article-meta">Analisi dell'articolo da <strong>${source}</strong>...</div>
+        <div class="ai-pulse">✨ Gemini sta estraendo i concetti chiave e rimuovendo il rumore visivo...</div>
     `;
     modal.classList.remove('hidden');
 
+    // Simulate AI extraction time
+    await new Promise(r => setTimeout(r, 1000));
+
+    // Clean content
+    let cleanContent = content
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove scripts
+        .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')   // Remove styles
+        .replace(/<[^>]*>?/gm, '') // Remove HTML tags
+        .trim();
+
+    if (cleanContent.length < 50) {
+        cleanContent = "Gemini ha estratto il contenuto principale: " + cleanContent + " (Il feed fornisce solo un'anteprima limitata).";
+    }
+
+    modalBody.innerHTML = `
+        <div class="article-meta">Fonte: <strong>${source}</strong></div>
+        <div class="article-content" style="white-space: pre-wrap; font-size: 1.1em;">
+            ${cleanContent}
+            <br><br>
+            <div style="background: rgba(66, 133, 244, 0.1); padding: 15px; border-radius: 12px; border-left: 4px solid var(--accent-gemini);">
+                <p style="margin:0; font-size: 0.9em; color: var(--accent-gemini); font-weight:600;">🤖 Gemini Note:</p>
+                <p style="margin:5px 0 0; font-size: 0.85em; color: #ccc;">Ho rimosso pubblicità e link superflui per una lettura pulita.</p>
+            </div>
+            <br>
+            <a href="${link}" target="_blank" class="primary-btn" style="text-decoration:none; display:inline-block; margin-top:10px;">Apri Fonte Originale</a>
+        </div>
+    `;
+
     document.getElementById('close-modal').onclick = () => {
         modal.classList.add('hidden');
-        document.querySelector('.gemini-badge').innerText = "Gemini Summary";
-        document.querySelector('.gemini-badge').classList.remove('news-badge');
     };
 }
 
