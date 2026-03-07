@@ -12,13 +12,12 @@ const state = {
     loading: false
 };
 
-// Initialize UI
+// Initialize
 document.addEventListener('DOMContentLoaded', () => {
     updateDate();
     initSettings();
     renderCategories();
     fetchAllNews();
-    setupNavigation();
 });
 
 function updateDate() {
@@ -29,13 +28,9 @@ function updateDate() {
 
 function updateGreeting() {
     const hour = new Date().getHours();
-    const greetingEl = document.getElementById('day-greeting');
-    if (greetingEl) {
-        if (hour >= 5 && hour < 18) {
-            greetingEl.innerText = 'Good Morning';
-        } else {
-            greetingEl.innerText = 'Good Evening';
-        }
+    const el = document.getElementById('day-greeting');
+    if (el) {
+        el.innerText = (hour >= 5 && hour < 18) ? 'Good Morning' : 'Good Evening';
     }
 }
 
@@ -44,7 +39,6 @@ function initSettings() {
     if (fontSlider) {
         fontSlider.value = state.fontSize;
         document.documentElement.style.setProperty('--base-font-size', `${state.fontSize}px`);
-
         fontSlider.addEventListener('input', (e) => {
             state.fontSize = e.target.value;
             document.documentElement.style.setProperty('--base-font-size', `${state.fontSize}px`);
@@ -55,185 +49,125 @@ function initSettings() {
     renderSources();
     renderManagedCategories();
 
-    const addSourceBtn = document.getElementById('add-source-btn');
-    if (addSourceBtn) addSourceBtn.onclick = addSource;
-    
-    const addCatBtn = document.getElementById('add-category-btn');
-    if (addCatBtn) addCatBtn.onclick = addCategory;
-}
-
-// Real News Fetching Logic
-async function fetchAllNews() {
-    const feed = document.getElementById('news-feed');
-    feed.innerHTML = '<div class="loader">Aggiornamento notizie...</div>';
-    state.loading = true;
-
-    try {
-        const fetchPromises = state.sources.map(source => 
-            fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(source.url)}`)
-                .then(res => res.json())
-                .catch(() => ({ status: 'error' }))
-        );
-
-        const results = await Promise.all(fetchPromises);
-        let allNews = [];
-
-        results.forEach((data, index) => {
-            if (data.status === 'ok') {
-                const sourceName = state.sources[index].name;
-                const items = data.items.map(item => ({
-                    title: item.title,
-                    source: sourceName,
-                    summary: item.description.replace(/<[^>]*>?/gm, '').substring(0, 150) + '...',
-                    content: item.content || item.description,
-                    link: item.link,
-                    pubDate: new Date(item.pubDate),
-                    category: detectCategory(item.title + " " + (item.content || item.description))
-                }));
-                allNews = [...allNews, ...items];
-            }
-        });
-
-        allNews.sort((a, b) => b.pubDate - a.pubDate);
-        state.news = allNews;
-        renderNews();
-    } catch (err) {
-        console.error("Fetch error:", err);
-        feed.innerHTML = '<div class="error" style="padding:20px; color:#ff453a; text-align:center;">Impossibile caricare le notizie. Controlla la connessione o gli URL nelle impostazioni.</div>';
-    } finally {
-        state.loading = false;
-    }
-}
-
-function detectCategory(text) {
-    text = text.toLowerCase();
-    if (text.includes('tech') || text.includes('apple') || text.includes('google') || text.includes('chip') || text.includes('smart') || text.includes('digitale')) return 'Tecnologia';
-    if (text.includes('scienza') || text.includes('nasa') || text.includes('spazio') || text.includes('ricerca') || text.includes('astronomia')) return 'Scienza';
-    if (text.includes('business') || text.includes('mercati') || text.includes('economia') || text.includes('finanza') || text.includes('dollaro')) return 'Business';
-    if (text.includes('design') || text.includes('minimalismo') || text.includes('architettura') || text.includes('grafica')) return 'Design';
-    return 'Tutte';
-}
-
-function renderCategories() {
-    const container = document.getElementById('category-tabs');
-    if (!container) return;
-    container.innerHTML = state.categories.map(cat => `
-        <div class="category-tab ${cat === state.activeCategory ? 'active' : ''}" onclick="setCategory('${cat}')">
-            ${cat}
-        </div>
-    `).join('');
-}
-
-function setCategory(cat) {
-    state.activeCategory = cat;
-    renderCategories();
-    renderNews();
-}
-
-function renderNews() {
-    const feed = document.getElementById('news-feed');
-    if (!feed) return;
-
-    if (state.news.length === 0 && !state.loading) {
-        feed.innerHTML = '<div class="empty-state" style="padding:40px; text-align:center; color:var(--text-muted);">Nessuna notizia trovata. Aggiungi URL validi di feed RSS nelle impostazioni.</div>';
-        return;
-    }
-
-    const filteredNews = state.activeCategory === 'Tutte' 
-        ? state.news 
-        : state.news.filter(n => n.category === state.activeCategory);
-
-    feed.innerHTML = filteredNews.map(item => `
-        <div class="news-card" onclick="showFullArticle('${item.title.replace(/'/g, "\\'")}', '${item.source.replace(/'/g, "\\'")}', '${item.content.replace(/'/g, "\\'").replace(/\n/g, " ").replace(/"/g, '&quot;')}', '${item.link}')">
-            <div class="card-header">
-                <span class="source">${item.source}</span>
-                <span class="gemini-tag">Gemini Summary</span>
-            </div>
-            <h2>${item.title}</h2>
-            <p class="summary-preview">${item.summary}</p>
-        </div>
-    `).join('');
-}
-
-// Navigation Logic
-function setupNavigation() {
-    const views = {
-        'nav-home': null, 
-        'nav-settings': 'settings-view'
-    };
-
-    Object.keys(views).forEach(navId => {
-        const el = document.getElementById(navId);
-        if (el) {
-            el.addEventListener('click', () => {
-                document.querySelectorAll('.tab-item').forEach(btn => btn.classList.remove('active'));
-                el.classList.add('active');
-
-    const openSettingsBtn = document.getElementById('open-settings-btn');
-    if (openSettingsBtn) {
-        openSettingsBtn.onclick = () => {
-            document.getElementById('settings-view').classList.remove('hidden');
-        };
+    // Custom Round Settings Button
+    const openBtn = document.getElementById('open-settings-btn');
+    if (openBtn) {
+        openBtn.onclick = () => document.getElementById('settings-view').classList.remove('hidden');
     }
 
     const closeBtn = document.getElementById('close-settings');
     if (closeBtn) {
         closeBtn.onclick = () => {
             document.getElementById('settings-view').classList.add('hidden');
-            document.getElementById('nav-home').classList.add('active');
-            document.getElementById('nav-settings').classList.remove('active');
-            fetchAllNews();
+            fetchAllNews(); // Refresh if sources changed
         };
+    }
+
+    document.getElementById('add-source-btn').onclick = addSource;
+    document.getElementById('add-category-btn').onclick = addCategory;
+}
+
+async function fetchAllNews() {
+    const feed = document.getElementById('news-feed');
+    feed.innerHTML = '<div class="loader ai-pulse">Recupero notizie reali...</div>';
+    state.loading = true;
+
+    try {
+        const promises = state.sources.map(s => 
+            fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(s.url)}`).then(r => r.json())
+        );
+        const results = await Promise.all(promises);
+        
+        state.news = [];
+        results.forEach((data, i) => {
+            if (data.status === 'ok') {
+                const items = data.items.map(item => ({
+                    title: item.title,
+                    source: state.sources[i].name,
+                    summary: item.description.replace(/<[^>]*>?/gm, '').substring(0, 150) + '...',
+                    content: item.content || item.description,
+                    link: item.link,
+                    pubDate: new Date(item.pubDate),
+                    category: detectCategory(item.title + " " + (item.content || item.description))
+                }));
+                state.news = [...state.news, ...items];
+            }
+        });
+
+        state.news.sort((a, b) => b.pubDate - a.pubDate);
+        renderNews();
+    } catch (e) {
+        feed.innerHTML = '<div class="error">Errore nel caricamento. Verifica i feed nelle impostazioni.</div>';
+    } finally {
+        state.loading = false;
     }
 }
 
-// Full Article View logic (Enhanced with AI simulation)
-async function showFullArticle(title, source, content, link) {
+function detectCategory(text) {
+    const t = text.toLowerCase();
+    if (t.match(/tech|apple|google|chip|smartphone|app/)) return 'Tecnologia';
+    if (t.match(/scienza|spazio|nasa|ricerca|medicina/)) return 'Scienza';
+    if (t.match(/borse|mercati|economia|fisco|business/)) return 'Business';
+    if (t.match(/design|grafica|minimalismo|architettura/)) return 'Design';
+    return 'Tutte';
+}
+
+function renderCategories() {
+    const container = document.getElementById('category-tabs');
+    container.innerHTML = state.categories.map(c => `
+        <div class="category-tab ${c === state.activeCategory ? 'active' : ''}" onclick="setCategory('${c}')">${c}</div>
+    `).join('');
+}
+
+window.setCategory = (c) => {
+    state.activeCategory = c;
+    renderCategories();
+    renderNews();
+};
+
+function renderNews() {
+    const feed = document.getElementById('news-feed');
+    const filtered = state.activeCategory === 'Tutte' ? state.news : state.news.filter(n => n.category === state.activeCategory);
+    
+    if (filtered.length === 0) {
+        feed.innerHTML = '<div class="empty">Nessuna notizia in questa categoria.</div>';
+        return;
+    }
+
+    feed.innerHTML = filtered.map(n => `
+        <div class="news-card" onclick="openArticle('${n.title.replace(/'/g, "\\'")}', '${n.source}', '${n.content.replace(/'/g, "\\'").replace(/\n/g, "")}', '${n.link}')">
+            <div class="card-header">
+                <span class="source">${n.source}</span>
+                <span class="gemini-tag">Gemini Summary</span>
+            </div>
+            <h2>${n.title}</h2>
+            <p class="summary-preview">${n.summary}</p>
+        </div>
+    `).join('');
+}
+
+window.openArticle = async (title, source, content, link) => {
     const modal = document.getElementById('summary-modal');
-    const modalTitle = document.getElementById('modal-title');
     const modalBody = document.getElementById('modal-body');
     const badge = document.querySelector('.gemini-badge');
 
-    if (!modal || !modalTitle || !modalBody) return;
-
     badge.innerText = "Gemini Analysis";
-    badge.classList.remove('news-badge');
-    modalTitle.innerText = title;
-    
-    // Pulse animation while "Gemini" processes
-    modalBody.innerHTML = `
-        <div class="article-meta">Analisi dell'articolo da <strong>${source}</strong>...</div>
-        <div class="ai-pulse">✨ Gemini sta estraendo i concetti chiave e rimuovendo il rumore visivo...</div>
-    `;
+    document.getElementById('modal-title').innerText = title;
+    modalBody.innerHTML = `<div class="ai-pulse">✨ Gemini sta analizzando l'articolo...</div>`;
     modal.classList.remove('hidden');
 
-    // Simulate AI extraction time
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 800));
 
-    // Clean content
-    let cleanContent = content
-        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove scripts
-        .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')   // Remove styles
-        .replace(/<[^>]*>?/gm, '') // Remove HTML tags
-        .trim();
-
-    if (cleanContent.length < 50) {
-        cleanContent = "Gemini ha estratto il contenuto principale: " + cleanContent + " (Il feed fornisce solo un'anteprima limitata).";
-    }
+    const clean = content.replace(/<[^>]*>?/gm, '').trim() || "Anteprima non disponibile. Usa il browser in-app.";
 
     modalBody.innerHTML = `
-        <div class="article-meta">Fonte: <strong>${source}</strong></div>
-        <div class="article-content" style="white-space: pre-wrap; font-size: 1.1em;">
-            ${cleanContent}
-            <br><br>
-            <div style="background: rgba(66, 133, 244, 0.1); padding: 15px; border-radius: 12px; border-left: 4px solid var(--accent-gemini);">
-                <p style="margin:0; font-size: 0.9em; color: var(--accent-gemini); font-weight:600;">🤖 Gemini Note:</p>
-                <p style="margin:5px 0 0; font-size: 0.85em; color: #ccc;">Ho rimosso pubblicità e link superflui per una lettura pulita.</p>
-            </div>
-            <br>
-            <button onclick="openInAppBrowser('${link}')" class="primary-btn" style="width:100%; margin-bottom:10px;">Visualizza Articolo Completo (In-App)</button>
-            <a href="${link}" target="_blank" class="secondary-btn" style="text-decoration:none; display:inline-block; width:100%; text-align:center; box-sizing:border-box;">Apri in Safari (Esterno)</a>
+        <div style="font-size:1.1em; line-height:1.6; white-space:pre-wrap; margin-bottom:20px;">${clean}</div>
+        <div style="background:rgba(66,133,244,0.1); padding:12px; border-radius:12px; border-left:3px solid #4285f4; margin-bottom:20px;">
+            <span style="color:#4285f4; font-weight:600; font-size:12px;">🤖 GEMINI:</span>
+            <p style="margin:5px 0 0; font-size:13px; color:#aaa;">Ho rimosso il rumore visivo per te.</p>
         </div>
+        <button onclick="openIframe('${link}')" class="primary-btn" style="margin-bottom:10px;">Browser In-App</button>
+        <a href="${link}" target="_blank" style="display:block; text-align:center; color:#888; text-decoration:none; font-size:14px;">Apri in Safari</a>
     `;
 
     document.getElementById('close-modal').onclick = () => {
@@ -241,62 +175,44 @@ async function showFullArticle(title, source, content, link) {
         document.getElementById('iframe-container').classList.add('hidden');
         document.getElementById('article-iframe').src = '';
     };
-}
-
-window.openInAppBrowser = function(url) {
-    const iframeContainer = document.getElementById('iframe-container');
-    const iframe = document.getElementById('article-iframe');
-    const badge = document.querySelector('.gemini-badge');
-
-    badge.innerText = "Browser In-App";
-    iframe.src = url;
-    iframeContainer.classList.remove('hidden');
 };
 
-// Source Management
+window.openIframe = (url) => {
+    document.querySelector('.gemini-badge').innerText = "Browser In-App";
+    const container = document.getElementById('iframe-container');
+    const iframe = document.getElementById('article-iframe');
+    iframe.src = url;
+    container.classList.remove('hidden');
+};
+
 function renderSources() {
     const list = document.getElementById('sources-list');
-    if (!list) return;
     list.innerHTML = state.sources.map(s => `
         <div class="list-item">
-            <div style="display:flex; flex-direction:column; max-width: 80%;">
-                <span style="font-weight:600; overflow:hidden; text-overflow:ellipsis;">${s.name}</span>
-                <span style="font-size:10px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis;">${s.url}</span>
-            </div>
+            <span>${s.name}</span>
             <button onclick="removeSource(${s.id})">✕</button>
         </div>
     `).join('');
 }
 
 function addSource() {
-    const urlInput = document.getElementById('new-source-url');
-    if (urlInput.value) {
-        try {
-            const id = Date.now();
-            let url = urlInput.value.trim();
-            if (!url.startsWith('http')) url = 'https://' + url;
-            
-            const hostname = new URL(url).hostname.replace('www.', '');
-            state.sources.push({ id, name: hostname, url: url });
-            localStorage.setItem('news_sources', JSON.stringify(state.sources));
-            renderSources();
-            urlInput.value = '';
-        } catch (e) {
-            alert("URL non valido. Assicurati di inserire un link corretto.");
-        }
+    const input = document.getElementById('new-source-url');
+    if (input.value) {
+        state.sources.push({ id: Date.now(), name: new URL(input.value).hostname, url: input.value });
+        localStorage.setItem('news_sources', JSON.stringify(state.sources));
+        renderSources();
+        input.value = '';
     }
 }
 
-window.removeSource = function(id) {
+window.removeSource = (id) => {
     state.sources = state.sources.filter(s => s.id !== id);
     localStorage.setItem('news_sources', JSON.stringify(state.sources));
     renderSources();
 };
 
-// Category Management
 function renderManagedCategories() {
     const list = document.getElementById('categories-list');
-    if (!list) return;
     list.innerHTML = state.categories.filter(c => c !== 'Tutte').map(c => `
         <div class="list-item">
             <span>${c}</span>
@@ -306,18 +222,18 @@ function renderManagedCategories() {
 }
 
 function addCategory() {
-    const catInput = document.getElementById('new-category-name');
-    if (catInput.value && !state.categories.includes(catInput.value)) {
-        state.categories.push(catInput.value);
+    const input = document.getElementById('new-category-name');
+    if (input.value) {
+        state.categories.push(input.value);
         localStorage.setItem('news_categories', JSON.stringify(state.categories));
         renderCategories();
         renderManagedCategories();
-        catInput.value = '';
+        input.value = '';
     }
 }
 
-window.removeCategory = function(cat) {
-    state.categories = state.categories.filter(c => c !== cat);
+window.removeCategory = (c) => {
+    state.categories = state.categories.filter(cat => cat !== c);
     localStorage.setItem('news_categories', JSON.stringify(state.categories));
     renderCategories();
     renderManagedCategories();

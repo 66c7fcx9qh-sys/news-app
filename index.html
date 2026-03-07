@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>My News App</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,9 +18,12 @@
                     <span id="day-greeting" class="greeting"></span>
                     <span class="date" id="current-date"></span>
                 </div>
-                <h1 class="brand-title">My News</h1>
+                <div class="header-right">
+                    <h1 class="brand-title">My News</h1>
+                    <button id="open-settings-btn" class="round-settings-btn">⚙️</button>
+                </div>
             </div>
- Riverside            <div class="category-tabs" id="category-tabs">
+            <div class="category-tabs" id="category-tabs">
                 <!-- Categories will be injected here -->
             </div>
         </header>
@@ -28,14 +31,14 @@
         <!-- Main Feed -->
         <main id="news-feed" class="news-feed">
             <div class="loader" id="loader">Caricamento notizie...</div>
-            <!-- News cards will be injected here -->
         </main>
 
-        <!-- Settings View (Hidden by default) -->
+        <!-- Settings Bottom Sheet -->
         <section id="settings-view" class="settings-view hidden">
+            <div class="sheet-handle"></div>
             <header class="view-header">
-                <button id="close-settings" class="icon-btn">✕</button>
                 <h2>Impostazioni</h2>
+                <button id="close-settings" class="close-btn">Fatto</button>
             </header>
             
             <div class="settings-content">
@@ -49,20 +52,16 @@
 
                 <div class="setting-group">
                     <h3>Fonti Notizie</h3>
-                    <div id="sources-list" class="managed-list">
-                        <!-- Sources will be injected here -->
-                    </div>
+                    <div id="sources-list" class="managed-list"></div>
                     <div class="add-action">
-                        <input type="text" id="new-source-url" placeholder="URL Fonte (es. https://...)">
+                        <input type="text" id="new-source-url" placeholder="URL Feed RSS">
                         <button id="add-source-btn" class="primary-btn">Aggiungi</button>
                     </div>
                 </div>
 
                 <div class="setting-group">
-                    <h3>Categorie e Gruppi</h3>
-                    <div id="categories-list" class="managed-list">
-                        <!-- Categories will be injected here -->
-                    </div>
+                    <h3>Categorie</h3>
+                    <div id="categories-list" class="managed-list"></div>
                     <div class="add-action">
                         <input type="text" id="new-category-name" placeholder="Nome Categoria">
                         <button id="add-category-btn" class="primary-btn">Crea</button>
@@ -71,37 +70,28 @@
             </div>
         </section>
 
-        <!-- Gemini Summary Modal -->
+        <!-- Gemini & Article Modal -->
         <div id="summary-modal" class="modal hidden">
             <div class="modal-content">
-                <button id="close-modal" class="close-modal">✕</button>
+                <button id="close-modal" class="modal-close-btn">✕</button>
                 <div class="modal-header">
-                    <span class="gemini-badge">Gemini Summary</span>
+                    <span class="gemini-badge">Gemini Analysis</span>
                     <h3 id="modal-title"></h3>
                 </div>
-                <div id="modal-body" class="summary-text">
-                    <!-- Summary content -->
-                </div>
-                <!-- In-App Browser -->
+                <div id="modal-body" class="summary-text"></div>
+                
+                <!-- In-App Browser Iframe -->
                 <div id="iframe-container" class="iframe-container hidden">
                     <iframe id="article-iframe" src="" frameborder="0"></iframe>
                 </div>
             </div>
         </div>
 
-        <!-- Tab Bar -->
+        <!-- Single Tab Navigation -->
         <nav class="tab-bar">
             <button class="tab-item active" id="nav-home">
                 <span class="icon">📰</span>
-                <span>Feed</span>
-            </button>
-            <button class="tab-item" id="nav-categories-mgr">
-                <span class="icon">🏷️</span>
-                <span>Categorie</span>
-            </button>
-            <button class="tab-item" id="nav-settings">
-                <span class="icon">⚙️</span>
-                <span>Impostazioni</span>
+                <span>Feed Notizie</span>
             </button>
         </nav>
     </div>
