@@ -31,7 +31,10 @@ function updateGreeting() {
     const hour = new Date().getHours();
     const el = document.getElementById('day-greeting');
     if (el) {
-        el.innerText = (hour >= 5 && hour < 18) ? 'Good Morning' : 'Good Evening';
+        if (hour >= 5 && hour < 12) el.innerText = 'Buongiorno';
+        else if (hour >= 12 && hour < 18) el.innerText = 'Buon pomeriggio';
+        else if (hour >= 18 && hour < 22) el.innerText = 'Buonasera';
+        else el.innerText = 'Buonanotte';
     }
 }
 
@@ -100,7 +103,8 @@ function initSwipeToClose() {
 
 async function fetchAllNews() {
     const feed = document.getElementById('news-feed');
-    feed.innerHTML = '<div class="loader ai-pulse">Caricamento notizie...</div>';
+    // Skeleton Loading
+    feed.innerHTML = Array(6).fill(0).map(() => `<div class="news-card skeleton skeleton-card"></div>`).join('');
     state.loading = true;
 
     try {
@@ -128,7 +132,7 @@ async function fetchAllNews() {
         state.news.sort((a, b) => b.pubDate - a.pubDate);
         renderNews();
     } catch (e) {
-        feed.innerHTML = '<div class="error">Errore nel caricamento. Verifica i feed nelle impostazioni.</div>';
+        feed.innerHTML = '<div class="error">Qualcosa è andato storto. Controlla la tua connessione.</div>';
     } finally {
         state.loading = false;
     }

@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a0c">
     <title>My News App</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,18 +16,19 @@
     <div id="app">
         <!-- Header -->
         <header class="main-header">
-            <div class="header-top">
-                <div class="header-left">
-                    <span id="day-greeting" class="greeting"></span>
-                    <span class="date" id="current-date"></span>
+            <div class="header-container">
+                <div class="header-top">
+                    <div class="header-left">
+                        <span id="day-greeting" class="greeting">Loading...</span>
+                        <span class="date" id="current-date"></span>
+                    </div>
+                    <div class="header-right">
+                        <button id="open-settings-btn" class="round-settings-btn" aria-label="Impostazioni">⚙️</button>
+                    </div>
                 </div>
-                <div class="header-right">
-                    <h1 class="brand-title">My News</h1>
-                    <button id="open-settings-btn" class="round-settings-btn">⚙️</button>
+                <div class="category-tabs" id="category-tabs">
+                    <!-- Categories will be injected here -->
                 </div>
-            </div>
-            <div class="category-tabs" id="category-tabs">
-                <!-- Categories will be injected here -->
             </div>
         </header>
 
